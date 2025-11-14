@@ -1,0 +1,11 @@
+{
+  "symbol": "AAPL",
+  "company_name": "AAPL Inc.",
+  "market_cap": 372112315582,
+  "pe_ratio": 14.61,
+  "pb_ratio": 1.33,
+  "roe": 0.065,
+  "eps": 42.58,
+  "sector": "Technology",
+  "industry": "Banking"
+}

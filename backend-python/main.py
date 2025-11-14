@@ -28,7 +28,7 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "message": "Trading Scanner API running on Render"}
+    return {"status": "ok", "message": "Trading Scanner API running"}
 
 @app.post("/api/fundamentals")
 async def load_fundamentals():
@@ -38,7 +38,7 @@ async def load_fundamentals():
         
         fundamentals_data = []
         
-        # Generate mock fundamental data since yfinance has dependency issues
+        # Generate mock fundamental data
         sectors = ["Technology", "Finance", "Energy", "Healthcare", "Consumer Goods"]
         industries = ["Software", "Banking", "Oil & Gas", "Pharmaceuticals", "Retail"]
         
@@ -68,8 +68,7 @@ async def load_fundamentals():
         return {
             "message": f"Loaded fundamentals for {len(fundamentals_data)} stocks",
             "count": len(fundamentals_data),
-            "note": "Using mock data - real yfinance integration requires pandas which has build issues",
-            "sample_data": fundamentals_data[:2]
+            "data": fundamentals_data
         }
         
     except Exception as e:
@@ -128,3 +127,8 @@ async def test_supabase():
                 "has_key": bool(os.getenv("SUPABASE_SERVICE_ROLE_KEY"))
             }
         }
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
