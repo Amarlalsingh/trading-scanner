@@ -1,93 +1,43 @@
-# Trading Scanner
+# Trading Scanner Frontend
 
-A comprehensive trading scanner system that fetches daily OHLC data from Shoonya, runs insight algorithms, and provides a Next.js frontend for visualization.
+Next.js frontend for the Trading Scanner system.
 
-## 🚀 Features
+## Setup
 
-- **Technical Analysis**: RSI, EMA crossover, breakout patterns
-- **Fundamental Data**: Market cap, PE ratio, sector analysis for 4000+ NSE stocks
-- **Real-time Dashboard**: Interactive charts with TradingView Lightweight Charts
-- **Signal Detection**: Automated buy/sell signal generation
-- **Supabase Integration**: PostgreSQL database with real-time updates
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-## 🏗️ Architecture
+2. **Configure environment:**
+   ```bash
+   cp .env.local.example .env.local
+   # Edit .env.local with your Supabase credentials
+   ```
 
-- **Backend**: Python FastAPI with Shoonya integration
-- **Database**: Supabase (PostgreSQL)
-- **Frontend**: Next.js with TradingView Lightweight Charts
-- **Storage**: Supabase Storage for chart images
+3. **Run development server:**
+   ```bash
+   npm run dev
+   ```
 
-## 📦 Project Structure
+## Environment Variables
 
-```
-trading-scanner/
-├── backend-python/          # Python FastAPI backend
-├── frontend-nextjs/          # Next.js frontend
-├── infra/                   # Database migrations
-└── docs/                    # Documentation
-```
+- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anonymous key
+- `NEXT_PUBLIC_API_URL`: Backend API URL (default: http://localhost:8000)
 
-## 🛠️ Quick Setup
+## Features
 
-### 1. Database Setup
-1. Create Supabase project
-2. Run `setup_database.sql` in SQL Editor
+- **Dashboard**: Overview of all tracked stocks with scores
+- **Stock Detail**: Individual stock analysis with charts and insights
+- **Admin Panel**: Upload CSV files and trigger data operations
+- **Interactive Charts**: TradingView Lightweight Charts integration
 
-### 2. Environment Configuration
+## Deployment
+
+Deploy to Vercel:
+
 ```bash
-# Backend
-cp backend-python/.env.example backend-python/.env
-# Edit with your Supabase credentials
-
-# Frontend  
-cp frontend-nextjs/.env.local.example frontend-nextjs/.env.local
-# Edit with your Supabase credentials
+npm run build
+# Deploy to Vercel via GitHub integration
 ```
-
-### 3. Install Dependencies
-```bash
-# Frontend
-cd frontend-nextjs && npm install
-
-# Backend
-cd backend-python && pip install -r requirements.txt
-```
-
-### 4. Start Services
-```bash
-# Backend
-cd backend-python && uvicorn app.main:app --reload
-
-# Frontend
-cd frontend-nextjs && npm run dev
-```
-
-### 5. Load Data
-1. Open http://localhost:3000/admin
-2. Click "Load Fundamentals" to load EQUITY_L.csv
-3. Add Shoonya credentials for price data
-4. Run backfill and scanner
-
-## 📊 Data Sources
-
-- **EQUITY_L.csv**: 4000+ NSE stocks list
-- **Shoonya API**: Daily OHLC price data
-- **yfinance**: Fundamental data (PE, ROE, Market Cap)
-
-## 🔧 API Endpoints
-
-- `GET /api/ohlc` - OHLC data for charts
-- `GET /api/insights` - Technical insights
-- `GET /api/fundamentals` - Fundamental data
-- `POST /api/load_fundamentals` - Load stock fundamentals
-- `POST /api/run_scanner` - Run insight algorithms
-
-## 🚀 Deployment
-
-- **Frontend**: Deploy to Vercel
-- **Backend**: Deploy to Railway/Fly.io
-- **Database**: Supabase managed PostgreSQL
-
-## 📝 License
-
-MIT License
