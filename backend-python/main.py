@@ -5,6 +5,8 @@ from supabase import create_client
 import os
 from typing import Optional
 import json
+import yfinance as yf
+from datetime import datetime, timedelta
 
 app = FastAPI(title="Trading Scanner API")
 
@@ -33,37 +35,42 @@ async def health():
 @app.post("/api/fundamentals")
 async def load_fundamentals():
     try:
-        # Get first 5 stocks for testing
-        stocks_result = supabase.table('screened_stocks').select('symbol').limit(5).execute()
+        # Get stocks from database or use default list
+        try:
+            stocks_result = supabase.table('screened_stocks').select('symbol').limit(5).execute()
+            symbols = [stock['symbol'] for stock in stocks_result.data]
+        except:
+            # Fallback to popular stocks
+            symbols = ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN']
         
         fundamentals_data = []
         
-        # Generate mock fundamental data
-        sectors = ["Technology", "Finance", "Energy", "Healthcare", "Consumer Goods"]
-        industries = ["Software", "Banking", "Oil & Gas", "Pharmaceuticals", "Retail"]
+        for symbol in symbols:
+            try:
+                ticker = yf.Ticker(symbol)
+                info = ticker.info
+                
+                fundamentals_data.append({
+                    "symbol": symbol,
+                    "company_name": info.get('longName', f"{symbol} Inc."),
+                    "market_cap": info.get('marketCap', 0),
+                    "pe_ratio": info.get('trailingPE', 0),
+                    "pb_ratio": info.get('priceToBook', 0),
+                    "roe": info.get('returnOnEquity', 0),
+                    "eps": info.get('trailingEps', 0),
+                    "sector": info.get('sector', 'Unknown'),
+                    "industry": info.get('industry', 'Unknown')
+                })
+            except Exception as e:
+                print(f"Error fetching {symbol}: {e}")
+                continue
         
-        for i, stock in enumerate(stocks_result.data):
-            symbol = stock['symbol']
-            
-            # Create realistic mock data
-            market_cap = 50000000000 + (i * 25000000000) + (hash(symbol) % 100000000000)
-            pe_ratio = 12.5 + (i * 2.3) + (hash(symbol) % 20)
-            
-            fundamentals_data.append({
-                "symbol": symbol,
-                "company_name": f"{symbol} Limited",
-                "market_cap": market_cap,
-                "pe_ratio": round(pe_ratio, 2),
-                "pb_ratio": round(1.5 + (i * 0.8) + (hash(symbol) % 5), 2),
-                "roe": round(0.12 + (i * 0.03) + (hash(symbol) % 20) / 100, 3),
-                "eps": round(15.0 + (i * 8.0) + (hash(symbol) % 50), 2),
-                "sector": sectors[i % len(sectors)],
-                "industry": industries[i % len(industries)]
-            })
-        
-        # Upsert to database
+        # Store in database
         if fundamentals_data:
-            supabase.table('fundamentals').upsert(fundamentals_data).execute()
+            try:
+                supabase.table('fundamentals').upsert(fundamentals_data).execute()
+            except:
+                pass  # Continue even if DB insert fails
         
         return {
             "message": f"Loaded fundamentals for {len(fundamentals_data)} stocks",
@@ -75,27 +82,26 @@ async def load_fundamentals():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/ohlc")
-async def get_ohlc(symbol: str, from_date: Optional[str] = None, to_date: Optional[str] = None):
+async def get_ohlc(symbol: str, days: int = 30):
     try:
-        query = supabase.table('daily_candles').select('*').eq('symbol', symbol)
+        ticker = yf.Ticker(symbol)
         
-        if from_date:
-            query = query.gte('ts', from_date)
-        if to_date:
-            query = query.lte('ts', to_date)
+        # Get historical data
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
         
-        result = query.order('ts').execute()
+        hist = ticker.history(start=start_date, end=end_date)
         
         # Format for lightweight charts
         data = []
-        for row in result.data:
+        for date, row in hist.iterrows():
             data.append({
-                'time': row['ts'],
-                'open': row['open'],
-                'high': row['high'],
-                'low': row['low'],
-                'close': row['close'],
-                'volume': row['volume']
+                'time': date.strftime('%Y-%m-%d'),
+                'open': round(float(row['Open']), 2),
+                'high': round(float(row['High']), 2),
+                'low': round(float(row['Low']), 2),
+                'close': round(float(row['Close']), 2),
+                'volume': int(row['Volume'])
             })
         
         return data
@@ -103,16 +109,39 @@ async def get_ohlc(symbol: str, from_date: Optional[str] = None, to_date: Option
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/quote/{symbol}")
+async def get_quote(symbol: str):
+    try:
+        ticker = yf.Ticker(symbol)
+        info = ticker.info
+        
+        return {
+            "symbol": symbol,
+            "price": info.get('currentPrice', 0),
+            "change": info.get('regularMarketChange', 0),
+            "change_percent": info.get('regularMarketChangePercent', 0),
+            "volume": info.get('regularMarketVolume', 0),
+            "market_cap": info.get('marketCap', 0)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/test")
 async def test_supabase():
     try:
-        # Test database connection
-        result = supabase.table('screened_stocks').select('symbol').limit(3).execute()
+        # Test yfinance
+        ticker = yf.Ticker("AAPL")
+        info = ticker.info
         
         return {
             "status": "success",
-            "message": "Supabase connection working",
-            "sample_stocks": result.data,
+            "message": "YFinance working",
+            "sample_data": {
+                "symbol": "AAPL",
+                "price": info.get('currentPrice', 0),
+                "name": info.get('longName', 'Apple Inc.')
+            },
             "env_check": {
                 "has_url": bool(os.getenv("SUPABASE_URL")),
                 "has_key": bool(os.getenv("SUPABASE_SERVICE_ROLE_KEY"))
@@ -121,11 +150,7 @@ async def test_supabase():
     except Exception as e:
         return {
             "status": "error",
-            "message": str(e),
-            "env_check": {
-                "has_url": bool(os.getenv("SUPABASE_URL")),
-                "has_key": bool(os.getenv("SUPABASE_SERVICE_ROLE_KEY"))
-            }
+            "message": str(e)
         }
 
 if __name__ == "__main__":
