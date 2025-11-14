@@ -81,16 +81,28 @@ async def load_fundamentals():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+def fix_symbol(symbol: str) -> str:
+    """Fix symbol format for different exchanges"""
+    # Indian stocks - add .NS for NSE
+    indian_stocks = ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'ICICIBANK', 'SBIN', 'ITC', 'LT', 'KOTAKBANK', 'BHARTIARTL']
+    if symbol.upper() in indian_stocks and not symbol.endswith(('.NS', '.BO')):
+        return f"{symbol.upper()}.NS"
+    return symbol
+
 @app.get("/api/ohlc")
 async def get_ohlc(symbol: str, days: int = 30):
     try:
-        ticker = yf.Ticker(symbol)
+        fixed_symbol = fix_symbol(symbol)
+        ticker = yf.Ticker(fixed_symbol)
         
         # Get historical data
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
         
         hist = ticker.history(start=start_date, end=end_date)
+        
+        if hist.empty:
+            raise HTTPException(status_code=404, detail=f"No data found for symbol {symbol}")
         
         # Format for lightweight charts
         data = []
@@ -112,7 +124,8 @@ async def get_ohlc(symbol: str, days: int = 30):
 @app.get("/api/quote/{symbol}")
 async def get_quote(symbol: str):
     try:
-        ticker = yf.Ticker(symbol)
+        fixed_symbol = fix_symbol(symbol)
+        ticker = yf.Ticker(fixed_symbol)
         info = ticker.info
         
         return {
