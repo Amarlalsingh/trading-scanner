@@ -21,6 +21,7 @@ export default function Dashboard() {
 
   const fetchStocks = async () => {
     try {
+      console.log('Fetching stocks from Supabase...')
       // Get screened stocks with latest scores and fundamentals
       const { data: stocksData, error } = await supabase
         .from('screened_stocks')
@@ -32,7 +33,12 @@ export default function Dashboard() {
         `)
         .order('stock_daily_scores.date', { ascending: false })
 
-      if (error) throw error
+      console.log('Supabase response:', { data: stocksData, error })
+
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
 
       // Process data to get latest score per stock
       const stocksMap = new Map()
