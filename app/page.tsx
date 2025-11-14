@@ -64,6 +64,27 @@ export default function Dashboard() {
     }
   }
 
+  const testAPI = async (endpoint: string) => {
+    try {
+      const response = await fetch(`/api/${endpoint}`)
+      const data = await response.json()
+      alert(`${endpoint} API Response: ${JSON.stringify(data, null, 2)}`)
+    } catch (error) {
+      alert(`${endpoint} API Error: ${error}`)
+    }
+  }
+
+  const loadFundamentals = async () => {
+    try {
+      const response = await fetch('/api/fundamentals', { method: 'POST' })
+      const data = await response.json()
+      alert(`Fundamentals loaded: ${JSON.stringify(data, null, 2)}`)
+      fetchStocks() // Refresh the stocks list
+    } catch (error) {
+      alert(`Fundamentals Error: ${error}`)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -78,6 +99,31 @@ export default function Dashboard() {
         <h1 className="text-3xl font-bold">Trading Dashboard</h1>
         <div className="text-sm text-gray-600">
           {stocks.length} stocks tracked
+        </div>
+      </div>
+
+      {/* API Test Buttons */}
+      <div className="mb-6 p-4 bg-gray-100 rounded-lg">
+        <h2 className="text-lg font-semibold mb-3">API Testing</h2>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => testAPI('health')}
+            className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
+          >
+            Test Health API
+          </button>
+          <button
+            onClick={loadFundamentals}
+            className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+          >
+            Load Fundamentals
+          </button>
+          <button
+            onClick={() => testAPI('ohlc?symbol=RELIANCE')}
+            className="bg-purple-500 text-white px-3 py-1 rounded text-sm hover:bg-purple-600"
+          >
+            Test OHLC API
+          </button>
         </div>
       </div>
 

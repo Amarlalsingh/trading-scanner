@@ -125,7 +125,15 @@ export default function Admin() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>
+      <div className="flex items-center mb-6">
+        <a 
+          href="/" 
+          className="bg-gray-500 text-white px-3 py-1 rounded mr-4 hover:bg-gray-600 text-sm"
+        >
+          ← Back to Dashboard
+        </a>
+        <h1 className="text-3xl font-bold">Admin Panel</h1>
+      </div>
 
       <div className="space-y-6">
         {/* Upload CSV */}
