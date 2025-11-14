@@ -66,21 +66,39 @@ export default function Dashboard() {
 
   const testAPI = async (endpoint: string) => {
     try {
+      console.log(`Testing API: ${endpoint}`)
       const response = await fetch(`/api/${endpoint}`)
+      console.log(`Response status: ${response.status}`)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
       const data = await response.json()
+      console.log('API Response:', data)
       alert(`${endpoint} API Response: ${JSON.stringify(data, null, 2)}`)
     } catch (error) {
+      console.error(`${endpoint} API Error:`, error)
       alert(`${endpoint} API Error: ${error}`)
     }
   }
 
   const loadFundamentals = async () => {
     try {
+      console.log('Loading fundamentals...')
       const response = await fetch('/api/fundamentals', { method: 'POST' })
+      console.log(`Fundamentals response status: ${response.status}`)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
       const data = await response.json()
+      console.log('Fundamentals Response:', data)
       alert(`Fundamentals loaded: ${JSON.stringify(data, null, 2)}`)
       fetchStocks() // Refresh the stocks list
     } catch (error) {
+      console.error('Fundamentals Error:', error)
       alert(`Fundamentals Error: ${error}`)
     }
   }
