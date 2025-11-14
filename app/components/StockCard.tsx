@@ -6,6 +6,7 @@ interface Stock {
   exchange: string
   combined_score?: number
   last_signal?: string
+  company_name?: string
   fundamentals?: {
     market_cap?: number
     pe_ratio?: number
@@ -37,7 +38,7 @@ export default function StockCard({ stock }: StockCardProps) {
         <div className="flex justify-between items-start mb-2">
           <div>
             <h3 className="font-semibold text-lg">{stock.symbol}</h3>
-            <p className="text-sm text-gray-500">{stock.exchange}</p>
+            <p className="text-sm text-gray-600">{stock.company_name || stock.exchange}</p>
           </div>
           <div className={`flex items-center ${getScoreColor(stock.combined_score)}`}>
             {getScoreIcon(stock.combined_score)}

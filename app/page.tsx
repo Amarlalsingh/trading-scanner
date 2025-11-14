@@ -22,16 +22,17 @@ export default function Dashboard() {
   const fetchStocks = async () => {
     try {
       console.log('Fetching stocks from Supabase...')
-      // Get screened stocks with latest scores and fundamentals
+      // Get screened stocks with optional scores and fundamentals
       const { data: stocksData, error } = await supabase
         .from('screened_stocks')
         .select(`
           symbol,
           exchange,
+          meta,
           stock_daily_scores(combined_score, date),
           fundamentals(market_cap, pe_ratio, sector)
         `)
-        .order('stock_daily_scores.date', { ascending: false })
+        .limit(50)
 
       console.log('Supabase response:', { data: stocksData, error })
 
@@ -49,7 +50,8 @@ export default function Dashboard() {
             symbol: stock.symbol,
             exchange: stock.exchange,
             combined_score: latestScore?.combined_score,
-            fundamentals: stock.fundamentals
+            fundamentals: stock.fundamentals,
+            company_name: stock.meta?.company_name
           })
         }
       })
