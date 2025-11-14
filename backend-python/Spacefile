@@ -1,0 +1,15 @@
+v: 0
+micros:
+  - name: trading-scanner-api
+    src: .
+    engine: python3.9
+    primary: true
+    public_routes:
+      - "/health"
+      - "/api/*"
+    presets:
+      env:
+        - name: SUPABASE_URL
+          description: "Supabase project URL"
+        - name: SUPABASE_SERVICE_ROLE_KEY
+          description: "Supabase service role key"
